@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sports Scheduler</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1b1b1b, #2e2e2e);
+            color: white;
+            text-align: center;
+        }
+
+        #loginPage, #menuPage, #timeTablePage {
+            display: none;
+            padding: 20px;
+        }
+
+        /* LOGIN */
+        .login-card {
+            width: 350px;
+            margin: 120px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .login-input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+        }
+        .login-btn {
+            width: 94%;
+            padding: 12px;
+            background: #4aa3ff;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        .login-btn:hover { background: #1c8dff; }
+
+        /* TOP BUTTONS */
+        .logoutBtn, .lineBtn, .scanBtn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            margin-bottom: 20px;
+            transition: 0.2s;
+        }
+        .logoutBtn { background: #ff4e4e; }
+        .logoutBtn:hover { background: #e74040; }
+
+        .lineBtn { background: #4aa3ff; margin-left: 10px; }
+        .lineBtn:hover { background: #1c8dff; }
+
+        .scanBtn { background: #37d163; margin-left: 10px; }
+        .scanBtn:hover { background: #2cb558; }
+
+        /* SPORTS PAGE */
+        .sportContainer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+        }
+        .sportCard {
+            position: relative;
+            width: 40%;
+            height: 280px;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.25s;
+        }
+        .sportCard:hover { transform: scale(1.05); }
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6));
+        }
+        .sportText {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 2.7rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-shadow: 2px 2px 10px black;
+        }
+
+        /* TIMETABLE */
+        .timetable-card {
+            width: 60%;
+            margin: auto;
+            background: rgba(255,255,255,0.08);
+            padding: 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .time-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 10px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .time-row:nth-child(odd) {
+            background: rgba(255,255,255,0.05);
+        }
+        .registered {
+            background: rgba(50,200,90,0.4) !important;
+            border-left: 5px solid #4dff4d;
+        }
+
+        /* POPUPS */
+        .popup-bg {
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            justify-content:center;
+            align-items:center;
+        }
+        .popup {
+            width: 300px;
+            padding: 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .popup-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .register-btn { background: #37d163; }
+        .unregister-btn { background: #ff4e4e; }
+
+        .line-input, .qr-info {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        #qr-reader {
+            width: 260px;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN PAGE -->
+    <div id="loginPage">
+        <div class="login-card">
+            <h2>Login</h2>
+            <input id="studentID" class="login-input" placeholder="Student ID">
+            <input id="password" class="login-input" type="password" placeholder="Password">
+            <button class="login-btn" onclick="enterSystem()">Enter</button>
+        </div>
+    </div>
+
+    <!-- MAIN PAGE -->
+    <div id="menuPage">
+        <button class="logoutBtn" onclick="logout()">Logout</button>
+        <button class="lineBtn" onclick="openLine()">LINE</button>
+        <button class="scanBtn" onclick="openQR()">SCAN QR</button>
+
+        <div class="sportContainer">
+            <div class="sportCard"
+                 onclick="goToTimeTable('Badminton')"
+                 style="background-image:url('https://images.unsplash.com/photo-1721760886493-61c47c1caec9?q=80&w=1200&auto=format&fit=crop');">
+                <div class="overlay"></div>
+                <div class="sportText">BADMINTON</div>
+            </div>
+
+            <div class="sportCard"
+                 onclick="goToTimeTable('Tennis')"
+                 style="background-image:url('https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?q=80&w=1200&auto=format&fit=crop');">
+                <div class="overlay"></div>
+                <div class="sportText">TENNIS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIMETABLE PAGE -->
+    <div id="timeTablePage">
+        <button class="logoutBtn" onclick="logout()">Logout</button>
+        <button class="lineBtn" onclick="openLine()">LINE</button>
+        <button class="scanBtn" onclick="openQR()">SCAN QR</button>
+
+        <h2 id="sportTitle"></h2>
+        <div class="timetable-card" id="tableContainer"></div>
+    </div>
+
+    <!-- TIME SLOT POPUP -->
+    <div id="popupBg" class="popup-bg">
+        <div class="popup">
+            <h3 id="popupTime"></h3>
+            <button id="registerBtn" class="popup-btn register-btn">Register</button>
+            <button id="unregisterBtn" class="popup-btn unregister-btn">Unregister</button>
+        </div>
+    </div>
+
+    <!-- LINE POPUP -->
+    <div id="linePopupBg" class="popup-bg">
+        <div class="popup">
+            <h3>LINE Link</h3>
+            <input id="lineLink" class="line-input" readonly
+                   value="https://linevoom.line.me/user/_dbljnibfM0u1Zv1Szerm5mY3CWlSTrAOzrODnWI">
+            <button class="popup-btn register-btn" onclick="copyLine()">Copy Link</button>
+        </div>
+    </div>
+
+    <!-- QR SCANNER POPUP -->
+    <div id="qrPopupBg" class="popup-bg">
+        <div class="popup">
+            <h3>Scan QR Code</h3>
+            <div id="qr-reader"></div>
+            <button class="popup-btn unregister-btn" onclick="closeQR()">Close</button>
+        </div>
+    </div>
+
+    <!-- QR SCANNER LIBRARY -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
