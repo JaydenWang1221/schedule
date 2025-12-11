@@ -1,10 +1,55 @@
 let registered = {};
-let probabilities = {}; // NEW — store stable percentages
+let probabilities = {}; // legacy, unused but kept for safety
 let qrScanner = null;
+let selectedCollege = null;
 
+// per-time-slot simulation data
+// structure: hour -> { groups, probability, jitter, spaces }
+let slotData = {};
+
+/* INITIAL LOAD */
 window.onload = () => {
-    document.getElementById("loginPage").style.display = "block";
+    // Show college selection first
+    document.getElementById("collegePage").style.display = "block";
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("menuPage").style.display = "none";
+    document.getElementById("timeTablePage").style.display = "none";
 };
+
+/* COLLEGE SELECTION */
+function confirmCollege() {
+    const select = document.getElementById("collegeSelect");
+    const value = select.value;
+
+    if (!value) {
+        alert("請先選擇學校");
+        return;
+    }
+
+    selectedCollege = value;
+
+    const loginTitle = document.getElementById("loginTitle");
+    loginTitle.textContent = `Login – ${selectedCollege}`;
+
+    document.getElementById("collegePage").style.display = "none";
+    document.getElementById("loginPage").style.display = "block";
+}
+
+/* BACK BUTTONS */
+function backToCollege() {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("collegePage").style.display = "block";
+}
+
+function backToLogin() {
+    document.getElementById("menuPage").style.display = "none";
+    document.getElementById("loginPage").style.display = "block";
+}
+
+function backToMenu() {
+    document.getElementById("timeTablePage").style.display = "none";
+    document.getElementById("menuPage").style.display = "block";
+}
 
 /* LOGIN */
 function enterSystem() {
@@ -16,18 +61,80 @@ function enterSystem() {
 function logout() {
     document.getElementById("menuPage").style.display = "none";
     document.getElementById("timeTablePage").style.display = "none";
-    document.getElementById("loginPage").style.display = "block";
+
+    // back to first page
+    document.getElementById("collegePage").style.display = "block";
+    document.getElementById("loginPage").style.display = "none";
 }
 
-/* COLOR GRADIENT */
+/* COLOR SCHEME FOR % */
 function percentColor(p) {
-    if (p < 50) {
-        let r = p / 50;
-        return `rgb(255, ${80 + r * 170}, 0)`;
+    // 0–19: red, 20–49: orange, 50–79: yellow, 80–100: green
+    if (p >= 80) {
+        return "rgb(102, 255, 178)";      // mint green
+    } else if (p >= 50) {
+        return "rgb(255, 241, 150)";      // soft yellow
+    } else if (p >= 20) {
+        return "rgb(255, 190, 120)";      // warm orange
     } else {
-        let r = (p - 50) / 50;
-        return `rgb(${255 - r * 210}, 255, ${r * 80})`;
+        return "rgb(255, 120, 120)";      // red
     }
+}
+
+/* HELPER: random integer in [min, max] */
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* Generate or reuse slot data */
+function getSlotData(hour) {
+    if (slotData[hour]) return slotData[hour];
+
+    const spaces = 6;
+    let groups;
+
+    if (hour >= 18 && hour <= 20) {
+        // Peak hours ~18:00-20:00 -> heavy usage
+        groups = randInt(14, 16);
+    } else if (hour >= 17 && hour <= 22) {
+        // Semi-busy
+        groups = randInt(6, 12);
+    } else {
+        // Off-peak
+        groups = randInt(2, 8);
+    }
+
+    // jitter factor to keep "style" per slot
+    const jitter = 0.9 + Math.random() * 0.2; // 0.9–1.1
+
+    const data = {
+        groups: groups,
+        probability: 0,
+        jitter: jitter,
+        spaces: spaces
+    };
+
+    recalcProbability(data);
+    slotData[hour] = data;
+    return data;
+}
+
+/* Recalculate probability for a given data object */
+function recalcProbability(data) {
+    // Hard rule: if groups <= spaces, 100% chance
+    if (data.groups <= data.spaces) {
+        data.probability = 100;
+        return;
+    }
+
+    let baseProb = data.spaces / data.groups; // < 1
+    if (baseProb < 0) baseProb = 0;
+
+    let finalProb = baseProb * data.jitter;   // apply jitter only when crowded
+    if (finalProb > 1) finalProb = 1;
+    if (finalProb < 0) finalProb = 0;
+
+    data.probability = Math.round(finalProb * 100);
 }
 
 /* OPEN TIMETABLE */
@@ -39,13 +146,29 @@ function goToTimeTable(sport) {
     const box = document.getElementById("tableContainer");
     box.innerHTML = "";
 
-    for (let t = 5; t <= 23; t++) {
+    // Header row
+    const header = document.createElement("div");
+    header.className = "time-header";
 
-        // KEEP the same probability, do not regenerate
-        if (!(t in probabilities)) {
-            probabilities[t] = Math.floor(Math.random() * 100);
-        }
-        let val = probabilities[t];
+    const hTime = document.createElement("div");
+    hTime.textContent = "Time";
+
+    const hProb = document.createElement("div");
+    hProb.textContent = "Possibility";
+
+    const hGroup = document.createElement("div");
+    hGroup.textContent = "Group";
+
+    header.appendChild(hTime);
+    header.appendChild(hProb);
+    header.appendChild(hGroup);
+    box.appendChild(header);
+
+    // Time rows
+    for (let t = 5; t <= 23; t++) {
+        const data = getSlotData(t);
+        const groups = data.groups;
+        const val = data.probability;
 
         const row = document.createElement("div");
         row.className = "time-row";
@@ -55,16 +178,24 @@ function goToTimeTable(sport) {
 
         row.onclick = () => openPopup(t);
 
-        let timeLabel = document.createElement("div");
+        // Time
+        const timeLabel = document.createElement("div");
         timeLabel.textContent = t + ":00";
 
-        let percent = document.createElement("div");
-        percent.textContent = val + "%";
-        percent.style.color = percentColor(val);
-        percent.style.fontWeight = "bold";
+        // Probability
+        const percentDiv = document.createElement("div");
+        percentDiv.textContent = val + "%";
+        percentDiv.style.color = percentColor(val);
+        percentDiv.style.fontWeight = "bold";
+
+        // Group number blob on the right
+        const groupsDiv = document.createElement("div");
+        groupsDiv.className = "group-pill";
+        groupsDiv.textContent = groups;
 
         row.appendChild(timeLabel);
-        row.appendChild(percent);
+        row.appendChild(percentDiv);
+        row.appendChild(groupsDiv);
         box.appendChild(row);
     }
 }
@@ -97,19 +228,33 @@ document.getElementById("popupBg").onclick = e => {
     }
 };
 
+/* DYNAMIC REGISTER / UNREGISTER
+   -> change groups & probability, then re-render */
 function register(time) {
-    registered[time] = true;
+    if (!registered[time]) {
+        registered[time] = true;
+
+        const data = getSlotData(time);
+        data.groups += 1;
+        recalcProbability(data);
+    }
     refresh();
 }
 
 function unregister(time) {
-    registered[time] = false;
+    if (registered[time]) {
+        registered[time] = false;
+
+        const data = getSlotData(time);
+        data.groups = Math.max(1, data.groups - 1);
+        recalcProbability(data);
+    }
     refresh();
 }
 
 function refresh() {
     document.getElementById("popupBg").style.display = "none";
-    let sport = document.getElementById("sportTitle").textContent.replace(" Time Table","");
+    const sport = document.getElementById("sportTitle").textContent.replace(" Time Table", "");
     goToTimeTable(sport);
 }
 
