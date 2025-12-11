@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sports Scheduler</title>
 
-
-
-
-
     <style>
         body {
             margin: 0;
@@ -18,9 +14,84 @@
             text-align: center;
         }
 
-        #loginPage, #menuPage, #timeTablePage {
+        #collegePage, #loginPage, #menuPage, #timeTablePage {
             display: none;
             padding: 20px;
+            position: relative; /* for back button */
+        }
+
+        /* BACK BUTTON (icon only) */
+        .backBtn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.8);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .backBtn::before {
+            content: "";
+            border-style: solid;
+            border-width: 6px 8px 6px 0; /* triangle */
+            border-color: transparent rgba(255,255,255,0.9) transparent transparent;
+            margin-left: -2px;
+        }
+
+        /* COLLEGE SELECT PAGE */
+        .college-card {
+            width: 350px;
+            margin: 120px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .college-title {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+        }
+
+        .college-select {
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 10px;
+            border: none;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        /* force scrollable list */
+        .college-select[size] {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .college-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 10px;
+            border: none;
+            background: #4aa3ff;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        .college-btn:hover {
+            background: #1c8dff;
         }
 
         /* LOGIN */
@@ -119,12 +190,32 @@
             border-radius: 20px;
             backdrop-filter: blur(8px);
         }
+
+        .time-header {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 8px 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.0);
+            margin-bottom: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #4aa3ff, #8f7bff);
+            box-shadow: 0 0 12px rgba(0,0,0,0.35);
+        }
+
+        .time-header div {
+            min-width: 80px;
+            text-align: center;
+        }
+
         .time-row {
             display: flex;
             justify-content: center;
             gap: 40px;
             padding: 10px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             border-radius: 10px;
             cursor: pointer;
         }
@@ -132,8 +223,22 @@
             background: rgba(255,255,255,0.05);
         }
         .registered {
-            background: rgba(50,200,90,0.4) !important;
+            background: rgba(50,200,90,0.35) !important;
             border-left: 5px solid #4dff4d;
+        }
+
+        .time-row div {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .group-pill {
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.35);
+            font-weight: 600;
+            min-width: 50px;
         }
 
         /* POPUPS */
@@ -185,10 +290,61 @@
 
 <body>
 
+    <!-- COLLEGE SELECT PAGE (FIRST PAGE, NO BACK BUTTON) -->
+    <div id="collegePage">
+        <div class="college-card">
+            <div class="college-title">選擇您的學校</div>
+            <select id="collegeSelect" class="college-select" size="10">
+                <option value="" disabled selected>-- 請選擇您的學校 --</option>
+
+                <!-- 國立大學 -->
+                <option>國立臺灣大學（NTU）</option>
+                <option>國立清華大學（NTHU）</option>
+                <option>國立陽明交通大學（NYCU）</option>
+                <option>國立成功大學（NCKU）</option>
+                <option>國立政治大學（NCCU）</option>
+                <option>國立臺灣師範大學（NTNU）</option>
+                <option>國立中央大學（NCU）</option>
+                <option>國立中山大學（NSYSU）</option>
+                <option>國立中興大學（NCHU）</option>
+                <option>國立臺灣科技大學（NTUST）</option>
+                <option>國立臺北大學（NTPU）</option>
+                <option>國立臺北科技大學（NTUT）</option>
+                <option>國立高雄大學（NUK）</option>
+                <option>國立高雄科技大學（NKUST）</option>
+                <option>國立東華大學（NDHU）</option>
+                <option>國立暨南國際大學（NCNU）</option>
+                <option>國立宜蘭大學（NIU）</option>
+                <option>國立聯合大學（NUU）</option>
+                <option>國立臺東大學（NTTU）</option>
+
+                <!-- 私立大學 -->
+                <option>淡江大學（TKU）</option>
+                <option>輔仁大學（FJU）</option>
+                <option>東吳大學（SCU）</option>
+                <option>中原大學（CYCU）</option>
+                <option>逢甲大學（FCU）</option>
+                <option>元智大學（YZU）</option>
+                <option>長庚大學（CGU）</option>
+                <option>靜宜大學（PU）</option>
+                <option>東海大學（THU）</option>
+                <option>中國醫藥大學（CMU）</option>
+                <option>臺北醫學大學（TMU）</option>
+                <option>高雄醫學大學（KMU）</option>
+                <option>世新大學（SHU）</option>
+                <option>實踐大學（USC）</option>
+
+                <option>其他 / Exchange Student</option>
+            </select>
+            <button class="college-btn" onclick="confirmCollege()">下一步</button>
+        </div>
+    </div>
+
     <!-- LOGIN PAGE -->
     <div id="loginPage">
+        <button class="backBtn" onclick="backToCollege()"></button>
         <div class="login-card">
-            <h2>Login</h2>
+            <h2 id="loginTitle">Login</h2>
             <input id="studentID" class="login-input" placeholder="Student ID">
             <input id="password" class="login-input" type="password" placeholder="Password">
             <button class="login-btn" onclick="enterSystem()">Enter</button>
@@ -197,8 +353,7 @@
 
     <!-- MAIN PAGE -->
     <div id="menuPage">
-
-
+        <button class="backBtn" onclick="backToLogin()"></button>
         <button class="logoutBtn" onclick="logout()">Logout</button>
         <button class="lineBtn" onclick="openLine()">LINE</button>
         <button class="scanBtn" onclick="openQR()">SCAN QR</button>
@@ -222,6 +377,7 @@
 
     <!-- TIMETABLE PAGE -->
     <div id="timeTablePage">
+        <button class="backBtn" onclick="backToMenu()"></button>
         <button class="logoutBtn" onclick="logout()">Logout</button>
         <button class="lineBtn" onclick="openLine()">LINE</button>
         <button class="scanBtn" onclick="openQR()">SCAN QR</button>
@@ -264,6 +420,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
